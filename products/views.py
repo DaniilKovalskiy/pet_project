@@ -1,18 +1,35 @@
-from django.shortcuts import render
-from .models import Product
-from django.views.generic import ListView
+from django.shortcuts import get_object_or_404
+from django.views.generic import ListView, DetailView
 
-
-def product_list(request):
-    products = Product.objects.all()
-    context = {
-        'products': products,
-    }
-    for el in products:
-        print(f"{el.name}: {el.price} руб.")
-    return render(request, "product_list.html", context)
+from .models import Product, ProductCategory
 
 
 class ProductListView(ListView):
     model = Product
-    template_name = 'product_list.html'
+    template_name = 'products_by_category.html'
+    paginate_by = 3
+
+    def get_queryset(self):
+        category_slug = self.kwargs.get('category_slug')
+        if category_slug:
+            category = get_object_or_404(ProductCategory, slug=category_slug)
+            return Product.objects.filter(category=category)
+        return Product.objects.all()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        categories = ProductCategory.objects.all()
+        page_obj = context['page_obj']
+
+        context.update({
+            'categories': categories,
+            'page_obj': page_obj,
+        })
+
+        return context
+
+
+class ProductDetailView(DetailView):
+    model = Product
+    template_name = 'product_detail.html'
+    context_object_name = 'product'
