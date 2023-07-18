@@ -1,12 +1,23 @@
 from django.shortcuts import get_object_or_404
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, TemplateView
 
 from .models import Product, ProductCategory
 
 
-class ProductListView(ListView):
+class ProductContextMixin():
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        categories = ProductCategory.objects.all()
+
+        context.update({
+            'categories': categories,
+        })
+        return context
+
+
+class ProductListView(ProductContextMixin, ListView):
     model = Product
-    template_name = 'products_by_category.html'
+    template_name = 'products.html'
     paginate_by = 3
 
     def get_queryset(self):
@@ -16,20 +27,13 @@ class ProductListView(ListView):
             return Product.objects.filter(category=category)
         return Product.objects.all()
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        categories = ProductCategory.objects.all()
-        page_obj = context['page_obj']
 
-        context.update({
-            'categories': categories,
-            'page_obj': page_obj,
-        })
-
-        return context
-
-
-class ProductDetailView(DetailView):
+class ProductDetailView(ProductContextMixin, DetailView):
     model = Product
     template_name = 'product_detail.html'
     context_object_name = 'product'
+
+
+class IndexView(TemplateView):
+    template_name = 'index.html'
+    title = 'Home'

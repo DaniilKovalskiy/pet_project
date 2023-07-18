@@ -24,11 +24,15 @@ class ProductCategory(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=256, verbose_name='Название')
+    short_description = models.TextField(
+        verbose_name='Краткое описание', default='Краткое описание')
     description = models.TextField(verbose_name='Описание')
     price = models.DecimalField(
         max_digits=10, decimal_places=2, verbose_name='Цена')
     category = models.ForeignKey(
         ProductCategory, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Категория')
+    image = models.ImageField(
+        upload_to='products_images', default="vendor/img/users/default_avatar.jpg", null=True, blank=True)
     slug = models.SlugField(max_length=256, unique=True,
                             db_index=True, verbose_name='URL')
 
